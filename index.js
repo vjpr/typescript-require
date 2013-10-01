@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 
 var tsc = require.resolve("typescript").replace(/typescript\.js$/, "tsc.js");
+var tscLib = require.resolve("typescript").replace(/typescript\.js$/, "lib.d.ts");
 var tscScript = vm.createScript(fs.readFileSync(tsc, "utf8"), tsc);
 
 var options = {
@@ -22,12 +23,11 @@ require.extensions['.ts'] = function(module) {
   var argv = [
     "node",
     "tsc.js",
-    "--nolib",
     "--target",
     options.targetES5 ? "ES5" : "ES3",
     "--out",
     tmpDir,
-    path.resolve(__dirname, "typings/lib.d.ts"),
+    tscLib,
     options.nodeLib ? path.resolve(__dirname, "typings/node.d.ts") : null,
     module.filename
   ];
@@ -41,7 +41,9 @@ require.extensions['.ts'] = function(module) {
 
   var sandbox = {
     process: proc,
-    require: require
+    require: require,
+    module: { exports: {} },
+    setTimeout: setTimeout
   };
 
   tscScript.runInNewContext(sandbox);
